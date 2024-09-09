@@ -5,13 +5,13 @@ import os
 load_dotenv()
 
 from fastapi import FastAPI
-from routes import analyze
+from routes import main, user
 
 app = FastAPI()
 
-# Include the analyze router
-app.include_router(analyze.router, prefix="/api")
-
+# Include the main router
+app.include_router(main.router, prefix="/api")
+app.include_router(user.router, prefix="/api/user")
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
