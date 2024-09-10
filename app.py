@@ -21,10 +21,11 @@ app.add_middleware(
 
 # Include the main router
 app.include_router(main.router, prefix="/api")
-app.include_router(user.router, prefix="/api/user")
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+
+# app.include_router(user.router, prefix="/api/user")
+# @app.get("/")
+# async def root():
+#     return {"message": "Hello Raumil"}
 
 if __name__ == "__main__":
     import uvicorn

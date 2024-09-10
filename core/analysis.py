@@ -16,6 +16,8 @@ def analyze_code_snippet(code_snippet: str):
         "space_complexity": string,
         "explanation": string
     }}
+    If code is empty, or if its not valid code, respond with O(1) for Time and Space Complexity, and explanation
+    "Code is not valid"
 
     Code snippet to analyze:
     {code_snippet}
@@ -25,7 +27,7 @@ def analyze_code_snippet(code_snippet: str):
         analysis = create_response_object(result["response"])
         if analysis['success']:
             try:
-                indices = generate_indices(analysis["time_complexity"], 100000)    
+                indices = generate_indices(analysis["time_complexity"], 10000)    
             except Exception as e:
                 print(e)
                 return {"success": True, "response": analysis, "indices": []}
