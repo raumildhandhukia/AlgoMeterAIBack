@@ -8,15 +8,20 @@ from fastapi import FastAPI
 from routes import main, user
 from fastapi.middleware.cors import CORSMiddleware
 
+DOMAIN = os.getenv("DOMAIN")
 
 app = FastAPI()
 
+origins = [
+    "*"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust according to your needs
+    allow_origins=origins,  # only this domain is allowed
     allow_credentials=True,
-    allow_methods=["POST", "GET"],  # You can limit this to specific methods like ["POST", "GET"]
-    allow_headers=["*"],
+    allow_methods=["*"],  # you can restrict methods (e.g., GET, POST) if needed
+    allow_headers=["*"],  # you can restrict headers if needed
 )
 
 # Include the main router

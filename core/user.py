@@ -29,27 +29,27 @@ def store_user_analysis(request: Request, code_snippet: str, analysis: dict):
             }
             user_result = user_collection.insert_one(user)
             user_id = user_result.inserted_id
-        else:
-            user_id = user['_id']
+        # else:
+        #     user_id = user['_id']
         
-        # Create new analysis document
-        new_analysis = {
-            "user_id": user_id,
-            "code_snippet": code_snippet,
-            "time_complexity": analysis['time_complexity'],
-            "space_complexity": analysis['space_complexity'],
-            "explanation": analysis['explanation'],
-            "created_at": datetime.now(UTC)
-        }
-        analysis_result = analysis_collection.insert_one(new_analysis)
+        # # Create new analysis document
+        # new_analysis = {
+        #     "user_id": user_id,
+        #     "code_snippet": code_snippet,
+        #     "time_complexity": analysis['time_complexity'],
+        #     "space_complexity": analysis['space_complexity'],
+        #     "explanation": analysis['explanation'],
+        #     "created_at": datetime.now(UTC)
+        # }
+        # analysis_result = analysis_collection.insert_one(new_analysis)
         
-        # Update user document with reference to the new analysis
-        user_collection.update_one(
-            {"_id": user_id},
-            {"$push": {"analyses": analysis_result.inserted_id}}
-        )
+        # # Update user document with reference to the new analysis
+        # user_collection.update_one(
+        #     {"_id": user_id},
+        #     {"$push": {"analyses": analysis_result.inserted_id}}
+        # )
         
-        print(f"Successfully stored analysis for device {device_id}")
+        # print(f"Successfully stored analysis for device {device_id}")
     except Exception as e:
         print(f"Database operation failed: {str(e)}")
     finally:

@@ -6,6 +6,8 @@ from core.analysis import analyze_code_snippet
 import redis
 import os
 
+from core.user import store_user_analysis
+
 REDIS_REMOTE_HOST = os.getenv("REDIS_REMOTE_HOST")
 REDIS_REMOTE_DB_PORT = os.getenv("REDIS_REMOTE_DB_PORT")
 REDIS_REMOTE_PASSWORD = os.getenv("REDIS_REMOTE_PASSWORD")
@@ -21,7 +23,6 @@ redis_client = redis.Redis(
   password=REDIS_REMOTE_PASSWORD,
   ssl=True
 )
-
 
 def get_device_id(request: Request) -> str:
     user_agent = request.headers.get("User-Agent", "")
@@ -71,7 +72,7 @@ async def analyze(request: Request, code_snippet: str = Body(..., embed=True)):
     
     if result["success"]:
         # Store user data asynchronously
-        # store_user_analysis(request, code_snippet, result["response"])
+        store_user_analysis(request, code_snippet, result["response"])
         return {"response": result["response"], "indices": result["indices"]}
     else:
         raise HTTPException(status_code=500, detail=result["error"])
