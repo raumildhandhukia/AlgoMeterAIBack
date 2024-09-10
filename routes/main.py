@@ -11,6 +11,6 @@ def analyze(request: Request, code_snippet: str = Body(..., embed=True)):
     if result["success"]:
         # Store user data asynchronously
         store_user_analysis(request, code_snippet, result["response"])
-        return result["response"]
+        return {"response": result["response"], "indices": result["indices"]}
     else:
         raise HTTPException(status_code=500, detail=result["error"])
