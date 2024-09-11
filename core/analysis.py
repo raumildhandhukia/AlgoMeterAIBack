@@ -16,8 +16,13 @@ def analyze_code_snippet(code_snippet: str):
         "space_complexity": string,
         "explanation": string
     }}
+
+    Note: Analyze the time and space complexity of this code. Pay special attention to whether recursive calls, loops, or nested structures involve overlapping subproblems or if they are independent.
+    Use this to determine the actual number of unique recursive calls and explain the time complexity based on that.
+
     If code is empty, or if its not valid code, respond with O(1) for Time and Space Complexity, and explanation
     "Code is not valid"
+    
 
     Code snippet to analyze:
     {code_snippet}
