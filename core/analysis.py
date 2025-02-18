@@ -5,6 +5,7 @@ import json
 
 def analyze_code_snippet(code_snippet: str):
     prompt = f"""
+
     Analyze the following code snippet and provide its 
     time complexity (Big O Notation), space complexity (Big O Notation), and a brief explanation (minimum 75 words, maximum 100 words).
     if time complexity can have any mathematical operators, or log or factorial, you must return the appropriate operator, sign, or log or factorial.
@@ -20,8 +21,11 @@ def analyze_code_snippet(code_snippet: str):
     Note: Analyze the time and space complexity of this code. Pay special attention to whether recursive calls, loops, or nested structures involve overlapping subproblems or if they are independent.
     Use this to determine the actual number of unique recursive calls and explain the time complexity based on that.
 
-    If code is empty, or if its not valid code, respond with O(1) for Time and Space Complexity, and explanation
+    If code is empty, or if its not valid code, respond with O(1) for Time and Space Complexity, and explanation as
     "Code is not valid"
+
+    If there is code written under function definition (just the name of the function and parameters) and no code inside the function, respond with O(1) for Time and Space Complexity, and explanation as 
+    "No executable code"
     
 
     Code snippet to analyze:
