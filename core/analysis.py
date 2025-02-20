@@ -24,8 +24,10 @@ def analyze_code_snippet(code_snippet: str):
     If code is empty, or if its not valid code, respond with O(1) for Time and Space Complexity, and explanation as
     "Code is not valid"
 
-    If there is code written under function definition (just the name of the function and parameters) and no code inside the function, respond with O(1) for Time and Space Complexity, and explanation as 
-    "No executable code"
+    If there is not code to analyze in function body, respond with O(1) for Time and Space Complexity, and explanation as
+    "No code to analyze" Dont assume the code based on function signature.
+
+    Do not analyze commented code, ignore commented code.
     
 
     Code snippet to analyze:
