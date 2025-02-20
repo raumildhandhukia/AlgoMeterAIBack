@@ -5,29 +5,27 @@ import json
 
 def analyze_code_snippet(code_snippet: str):
     prompt = f"""
+    SYSTEM: You are an analysis tool that strictly evaluates provided code snippets without making assumptions or predictions about their functionality. Your task is to analyze the given code snippet based solely on its content.
 
-    Analyze the following code snippet  {code_snippet} and ignore comments and empty function body. 
-    Do not assume or generate any code based on function name. 
-    We are only supposed to analyze user code not provide them with solution.
-    
-    provide given code's time complexity, space complexity, and a brief explanation (minimum 75 words, maximum 100 words).
+    Analyze the following code snippet: {code_snippet}. Ignore comments and any empty function bodies. 
+    Do not generate or assume any code based on function names or signatures. 
 
-    Note: Analyze the time and space complexity of this code. Pay special attention to whether recursive calls, loops, 
-    or nested structures involve overlapping subproblems or if they are independent.
-    Use this to determine the actual number of unique recursive calls and explain the time complexity based on that.
+    Your analysis should include:
+    - Time complexity
+    - Space complexity
+    - A brief explanation (minimum 75 words, maximum 100 words)
 
-    If code is empty, or if its not valid code, respond with O(1) for Time and Space Complexity, and explanation as
-    "Code is not valid"
+    If the provided code is empty, invalid, or contains no executable statements, respond with:
+    - Time complexity: O(1)
+    - Space complexity: O(1)
+    - Explanation: "Code is not valid" or "No code to analyze" or "Function body is empty" as appropriate.
 
-    If there is not code to analyze in function body, respond with O(1) for Time and Space Complexity, and explanation as
-    "No code to analyze" Dont assume the code based on function signature.
+    Do not analyze commented code; ignore any comments present in the snippet.
 
-    Do not analyze commented code, ignore commented code.
+    If the time complexity can include mathematical operators, logarithms, or factorials, return the appropriate notation. For example: O(n^2 + n*log(n) + n!), O(n*m), O(log(n)), O(n!), O(n^2 + n*log(n) + n!), O(m+n), O(n^3), O(m-n). 
+    DO NOT RETURN UNSIGNED EQUATIONS, AND DO NOT RETURN LOG WITHOUT BRACKETS AROUND VARIABLES.
 
-    if time complexity can have any mathematical operators, or log or factorial, you must return the appropriate operator, sign, or log or factorial.
-    for example, O(n^2 + n*log(n) + n!), O(n*m), O(log(n)), O(n!), O(n^2 + n*log(n) + n!), O(m+n), O(n^3), O(m-n) 
-    DO NOT RETURN UNSIGNED EQUATIONS, DO NOT RETURN LOG WITHOUT BRACKETS AROUND VARIABLE
-    Return the response in JSON format using this schema:
+    Return the response in JSON format using the following schema:
     {{
         "time_complexity": string,
         "space_complexity": string,
