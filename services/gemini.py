@@ -7,7 +7,7 @@ from google.api_core import exceptions as google_exceptions
 # Initialize the Gemini model
 try:
     genai.configure(api_key=os.getenv("GENAI_API_KEY"))
-    model = genai.GenerativeModel('gemini-1.5-flash', generation_config={"response_mime_type": "application/json"})
+    model = genai.GenerativeModel('gemini-2.0-flash', generation_config={"response_mime_type": "application/json"})
 except Exception as e:
     print(f"Error initializing Gemini model: {str(e)}")
     model = None
@@ -23,7 +23,7 @@ def get_llm_response(prompt: str) -> Dict[str, Union[str, bool]]:
                 # "temperature": 0.7,
                 # "top_p": 0.95,
                 # "top_k": 40,
-                "max_output_tokens": 256,
+                "max_output_tokens": 512,
             }
         )
         return {"success": True, "response": response.text}

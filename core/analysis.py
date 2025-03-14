@@ -7,13 +7,24 @@ def analyze_code_snippet(code_snippet: str):
     prompt = f"""
     SYSTEM: You are an analysis tool that strictly evaluates provided code snippets without making assumptions or predictions about their functionality. Your task is to analyze the given code snippet based solely on its content.
 
-    Analyze the following code snippet: {code_snippet}. Ignore comments and any empty function bodies. 
-    Do not generate or assume any code based on function names or signatures. 
+    Analyze the following code snippet: {code_snippet}. 
+    Follow this at all time
+    1) Ignore comments and any empty function bodies. 
+    2) Do not generate or assume any code based on function names or signatures. 
+    3) Analyze the code line by line. Identify phases of algorith. 
+    4) Analyze time complexity of each phase, also space complexity for each phase
+
+    Phase is a part of an algorithm which is having runtime more than O(1) and taking space more than O(1). Algorithm may have one or more phases.
+
+    There might be nested phases like we are looping through array (Phase 1) and for each array element we are doing some process (Phase 2)
+
+    Time complexity or Space complexity of algorithm should be the one which is dominating the runtime and space. 
+
 
     Your analysis should include:
-    - Time complexity
-    - Space complexity
-    - A brief explanation (minimum 75 words, maximum 100 words)
+    - Time complexity (Domanating)
+    - Space complexity (Domanating)
+    - A brief explanation (minimum 75 words, maximum 100 words). Should include time and space complexity for all phases.
 
     If the provided code is empty, invalid, or contains no executable statements, respond with:
     - Time complexity: O(1)
