@@ -20,6 +20,18 @@ def analyze_code_snippet(code_snippet: str):
 
     Time complexity or Space complexity of algorithm should be the one which is dominating the runtime and space. 
 
+    Here is a confusing area where you might think space complexity is O(n) but in reality it is O(1):
+     -> Code attempts to store result or indices in an array inside a loop, but code is breaking the loop and there are static number of elements in array.
+        At this time you might need to actually analyze the code, and see if actually there can be a case where array can have all n elemets or it will break after
+        static number of elements
+     -> Storing the frequency of charactors in hashmap. You might think input string has length of n so space complexity is n. but in reality there are just 26 alphabets 
+        and maximum 256 distinct charactors in input. So hashmap's space complexity is O(1) as it doesnt grow as input size increases.
+    
+    Here is a confusing area where you might think Time complexity is O(n) but in reality it is O(1):
+    -> Looping through static number of elements. You might think that loop is there so there is time complexity of O(n) but in some cases, loop will have static
+       number of iterations regardless of size of input array
+    -> Make sure when loop is executing it actually can execute n times in worst case if you are tempted to give O(n) complexity
+
 
     Your analysis should include:
     - Time complexity (Domanating)
