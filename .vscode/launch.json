@@ -8,8 +8,16 @@
       "name": "Python Debugger: app.py",
       "type": "debugpy",
       "request": "launch",
-      "program": "app.py",
-      "console": "integratedTerminal"
+      "program": "${workspaceFolder}/app.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopOnEntry": false,
+      "purpose": ["debug-in-terminal"]
     }
   ]
 }

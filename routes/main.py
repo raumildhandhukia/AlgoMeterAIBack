@@ -1,22 +1,24 @@
-import hashlib
-import time
-from fastapi import APIRouter, HTTPException, Body, Request
+import urllib.parse
+import re
+import json
+from fastapi import APIRouter, HTTPException, Body, Request, Query
 from fastapi.responses import JSONResponse
 from core.analysis import analyze_code_snippet
+from utility.playwright import fetch_leetcode_page_with_playwright  
+from utility.beautiful_soup import get_leetcode_company_tags
+from utility.redis_cache import get_cached_data, cache_data, invalidate_cache
 import redis
 import os
-
 from core.user import store_user_analysis
 
+# Redis configuration
 REDIS_REMOTE_HOST = os.getenv("REDIS_REMOTE_HOST")
 REDIS_REMOTE_DB_PORT = os.getenv("REDIS_REMOTE_DB_PORT")
 REDIS_REMOTE_PASSWORD = os.getenv("REDIS_REMOTE_PASSWORD")
-MAX_REQUESTS = int(os.getenv("API_MAX_REQUESTS"))
-TIME_FRAME = int(os.getenv("API_TIME_FRAME"))
-
 
 router = APIRouter()
 
+# Initialize Redis client
 redis_client = redis.Redis(
   host=REDIS_REMOTE_HOST,
   port=REDIS_REMOTE_DB_PORT,
@@ -24,34 +26,100 @@ redis_client = redis.Redis(
   ssl=True
 )
 
-def get_device_id(request: Request) -> str:
-    user_agent = request.headers.get("User-Agent", "")
-    ip_address = request.client.host
-    fingerprint = f"{user_agent}{ip_address}"
-    return hashlib.sha256(fingerprint.encode()).hexdigest()
+# Rate limiting is now handled by middleware
 
-def rate_limit(device_id: str) -> tuple[bool, int]:
-    current_time = int(time.time())
-    key = f"api_rate_limit:{device_id}"
-
-    with redis_client.pipeline() as pipe:
-        pipe.zremrangebyscore(key, 0, current_time - TIME_FRAME)  # remove expired
-        pipe.zrange(key, 0, -1, withscores=True)  # get requests after filtration
-        results = pipe.execute()
+@router.get("/company-tags")
+async def get_company_tags(
+    request: Request, 
+    url: str = Query(None, description="LeetCode problem URL to fetch company tags")
+):
+    print(f"Received request with URL parameter: {url}")
+    # Check if URL parameter is provided
+    if url is None:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "Missing required query parameter 'url'"}
+        )
     
-    recent_requests = results[1]
-    request_count = len(recent_requests)
-    
-    if request_count < MAX_REQUESTS:
-        # Only add the new request if the limit is not exceeded
-        redis_client.zadd(key, {current_time: current_time})
-        redis_client.expire(key, TIME_FRAME)
-        return True, 0
-    else:
-        oldest_timestamp = recent_requests[0][1] if recent_requests else current_time
-        reset_time = oldest_timestamp + TIME_FRAME
-        seconds_left = max(0, int(reset_time - current_time))
-        return False, seconds_left
+    try:
+        # Decode the URL parameter if it's encoded
+        decoded_url = urllib.parse.unquote(url)
+        print(f"Decoded URL: {decoded_url}")
+        
+        # Extract the problem title slug from the URL
+        match = re.search(r'/problems/([^/]+)/', decoded_url)
+        if not match:
+            return JSONResponse(
+                status_code=400,
+                content={"detail": "Invalid LeetCode problem URL"}
+            )
+            
+        title_slug = match.group(1)
+        print(f"Title slug: {title_slug}")
+        
+        # Create a cache key from the title slug
+        cache_key = f"leetcode:company_tags:{title_slug}"
+        
+        # Try to get data from Redis cache
+        cached_data, is_valid = get_cached_data(redis_client, cache_key)
+        
+        # If we have valid cached data (less than 14 days old), return it
+        if cached_data and is_valid:
+            print(f"Returning cached data for {title_slug}")
+            return cached_data
+        
+        # If cache is invalid or doesn't exist, fetch fresh data
+        print(f"Fetching fresh data for {title_slug}")
+        
+        # Use Playwright to fetch the page content (mimicking a real browser)
+        html_content, status_code = await fetch_leetcode_page_with_playwright(decoded_url)
+        
+        if status_code != 200 or not html_content:
+            # If we have expired cached data, return it as a fallback
+            if cached_data:
+                print(f"Fetch failed, returning expired cached data for {title_slug}")
+                return cached_data
+                
+            return JSONResponse(
+                status_code=status_code or 500,
+                content={
+                    "detail": f"Failed to fetch data from LeetCode. Status code: {status_code}",
+                }
+            )
+        
+        # Extract company tags from HTML content
+        company_tag_stats = get_leetcode_company_tags(html_content)
+        
+        if company_tag_stats:
+            # Parse the JSON string to a Python object
+            parsed_data = json.loads(company_tag_stats)
+            
+            # Cache the parsed data in Redis
+            cache_data(redis_client, cache_key, parsed_data)
+            
+            return parsed_data
+        else:
+            # If we have expired cached data, return it as a fallback
+            if cached_data:
+                print(f"No new data found, returning expired cached data for {title_slug}")
+                return cached_data
+                
+            return JSONResponse(
+                status_code=404,
+                content={"error": "Could not find companyTagStatsV2 data for this problem"}
+            )
+    except Exception as e:
+        import traceback
+        error_traceback = traceback.format_exc()
+        print(f"Error: {str(e)}")
+        print(f"Traceback: {error_traceback}")
+        raise HTTPException(
+            status_code=500, 
+            detail={
+                "error": str(e),
+                "traceback": error_traceback
+            }
+        )
 
 @router.post("/analyze")
 async def analyze(request: Request, code_snippet: str = Body(..., embed=True)):

@@ -7,6 +7,7 @@ load_dotenv()
 from fastapi import FastAPI
 from routes import main, user
 from fastapi.middleware.cors import CORSMiddleware
+from middleware.rate_limiter import rate_limit_middleware
 
 DOMAIN = os.getenv("DOMAIN")
 
@@ -23,6 +24,9 @@ app.add_middleware(
     allow_methods=["*"],  # you can restrict methods (e.g., GET, POST) if needed
     allow_headers=["*"],  # you can restrict headers if needed
 )
+
+# Add rate limiting middleware
+app.middleware("http")(rate_limit_middleware)
 
 # Include the main router
 app.include_router(main.router, prefix="/api")
