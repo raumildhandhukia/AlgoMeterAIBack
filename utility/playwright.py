@@ -1,22 +1,31 @@
 from playwright.async_api import async_playwright
 import os
 import json
+import sys
+
 # LeetCode authentication tokens
 LEETCODE_CSRFTOKEN = os.getenv("LEETCODE_CSRFTOKEN")
 LEETCODE_SESSION = os.getenv("LEETCODE_SESSION")
 LEETCODE_CF_CLEARANCE = os.getenv("LEETCODE_CF_CLEARANCE")
+
+# Set browser path for serverless environment
+os.environ["PLAYWRIGHT_BROWSERS_PATH"] = os.environ.get("PLAYWRIGHT_BROWSERS_PATH", "0")
+
 async def fetch_leetcode_page_with_playwright(url):
     """Use Playwright to fetch a LeetCode page with browser cookies"""
     try:
         async with async_playwright() as p:
-            # Launch the browser with options to avoid detection
+            # Launch the browser with options optimized for serverless
             browser = await p.chromium.launch(
                 headless=True,
                 args=[
                     '--disable-blink-features=AutomationControlled',
                     '--no-sandbox',
                     '--disable-web-security',
-                    '--disable-features=IsolateOrigins,site-per-process'
+                    '--disable-features=IsolateOrigins,site-per-process',
+                    '--disable-dev-shm-usage',  # Helps with memory issues in containerized environments
+                    '--disable-gpu',            # Disable GPU hardware acceleration
+                    '--single-process'          # Use a single process to reduce memory usage
                 ]
             )
             
