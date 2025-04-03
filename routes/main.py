@@ -1,11 +1,10 @@
 import urllib.parse
 import re
 import json
+import requests
 from fastapi import APIRouter, HTTPException, Body, Request, Query
 from fastapi.responses import JSONResponse
 from core.analysis import analyze_code_snippet
-from utility.playwright import fetch_leetcode_page_with_playwright  
-from utility.beautiful_soup import get_leetcode_company_tags
 from utility.redis_cache import get_cached_data, cache_data, invalidate_cache
 import redis
 import os
@@ -15,7 +14,7 @@ from core.user import store_user_analysis
 REDIS_REMOTE_HOST = os.getenv("REDIS_REMOTE_HOST")
 REDIS_REMOTE_DB_PORT = os.getenv("REDIS_REMOTE_DB_PORT")
 REDIS_REMOTE_PASSWORD = os.getenv("REDIS_REMOTE_PASSWORD")
-
+SCRAP_URL = os.getenv("SCRAP_URL")
 router = APIRouter()
 
 # Initialize Redis client
@@ -72,9 +71,15 @@ async def get_company_tags(
         print(f"Fetching fresh data for {title_slug}")
         
         # Use Playwright to fetch the page content (mimicking a real browser)
-        html_content, status_code = await fetch_leetcode_page_with_playwright(decoded_url)
+        # html_content, status_code = await fetch_leetcode_page_with_playwright(decoded_url)
+
+        response = requests.get(SCRAP_URL + f"/api/scrape?url={url}")
+        res = response.json()
+        html_content = res.get("htmlContent")
+        status_code = res.get("statusCode")
+        company_tag_stats = res.get("companyTags")  # Get companyTags directly from the API response
         
-        if status_code != 200 or not html_content:
+        if status_code != 200 or not company_tag_stats:
             # If we have expired cached data, return it as a fallback
             if cached_data:
                 print(f"Fetch failed, returning expired cached data for {title_slug}")
@@ -87,26 +92,24 @@ async def get_company_tags(
                 }
             )
         
-        # Extract company tags from HTML content
-        company_tag_stats = get_leetcode_company_tags(html_content)
-        
-        if company_tag_stats:
-            # Parse the JSON string to a Python object
+        # Parse the JSON string to a Python object
+        try:
             parsed_data = json.loads(company_tag_stats)
             
             # Cache the parsed data in Redis
             cache_data(redis_client, cache_key, parsed_data)
             
             return parsed_data
-        else:
+        except json.JSONDecodeError as e:
+            print(f"Error parsing company tags JSON: {str(e)}")
             # If we have expired cached data, return it as a fallback
             if cached_data:
-                print(f"No new data found, returning expired cached data for {title_slug}")
+                print(f"JSON parse error, returning expired cached data for {title_slug}")
                 return cached_data
                 
             return JSONResponse(
-                status_code=404,
-                content={"error": "Could not find companyTagStatsV2 data for this problem"}
+                status_code=400,
+                content={"error": "Could not parse company tags data"}
             )
     except Exception as e:
         import traceback
