@@ -4,9 +4,6 @@
     {
       "src": "app.py",
       "use": "@vercel/python",
-      "config": {
-        "buildCommand": "python -m playwright install"
-      }
     }
   ],
   "routes": [
