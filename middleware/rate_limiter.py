@@ -51,10 +51,17 @@ async def rate_limit_middleware(request: Request, call_next):
     is_allowed, seconds_left = check_rate_limit(device_id)
     
     if not is_allowed:
-        return JSONResponse(
+        response = JSONResponse(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             content={"detail": "Rate limit exceeded", "seconds_left": seconds_left}
         )
+        
+        # Add CORS headers to the error response
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        
+        return response
     
     # If not rate limited, proceed with the request
     return await call_next(request)
