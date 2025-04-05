@@ -134,19 +134,6 @@ async def get_company_tags(
 
 @router.post("/analyze")
 async def analyze(request: Request, code_snippet: str = Body(..., embed=True)):
-    device_id = get_device_id(request)
-    try:
-        is_allowed, seconds_left = rate_limit(device_id)
-    except Exception as e:
-        print(f"Rate limiting error: {str(e)}")
-        is_allowed, seconds_left = False, 300
-    
-    if not is_allowed:
-        return JSONResponse(
-            status_code=429,
-            content={"detail": "Rate limit exceeded", "seconds_left": seconds_left}
-        )
-    
     result = analyze_code_snippet(code_snippet)
     
     if result["success"]:
