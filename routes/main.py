@@ -73,11 +73,19 @@ async def get_company_tags(
         # Use Playwright to fetch the page content (mimicking a real browser)
         # html_content, status_code = await fetch_leetcode_page_with_playwright(decoded_url)
 
+        # First attempt to scrape the URL
         response = requests.get(SCRAP_URL + f"/api/scrape?url={url}")
         res = response.json()
-        html_content = res.get("htmlContent")
         status_code = res.get("statusCode")
         company_tag_stats = res.get("companyTags")  # Get companyTags directly from the API response
+        
+        # If the first attempt fails with a non-200 status, try one more time
+        if status_code != 200:
+            print(f"First scraping attempt failed with status code: {status_code}. Retrying...")
+            response = requests.get(SCRAP_URL + f"/api/scrape?url={url}")
+            res = response.json()
+            status_code = res.get("statusCode")
+            company_tag_stats = res.get("companyTags")
         
         if status_code != 200 or not company_tag_stats:
             # If we have expired cached data, return it as a fallback
