@@ -13,16 +13,23 @@ DOMAIN = os.getenv("DOMAIN")
 
 app = FastAPI()
 
+# Define allowed origins
 origins = [
-    "*"
+    "*",
+    "https://www.algometerai.com",
+    "https://algometerai.com",
+    "http://localhost:3000",  # For local development
+    "http://127.0.0.1:3000"   # For local development
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # only this domain is allowed
-    allow_credentials=True,
-    allow_methods=["*"],  # you can restrict methods (e.g., GET, POST) if needed
-    allow_headers=["*"],  # you can restrict headers if needed
+    allow_origins=origins,  # Specific domains are allowed, not wildcard
+    allow_credentials=True,  # Allow credentials (cookies)
+    allow_methods=["GET", "POST", "OPTIONS", "DELETE", "PUT", "PATCH"],
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+    expose_headers=["Content-Length"],
+    max_age=600  # Cache preflight requests for 10 minutes
 )
 
 # Add rate limiting middleware
