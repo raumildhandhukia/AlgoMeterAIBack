@@ -15,7 +15,6 @@ app = FastAPI()
 
 # Define allowed origins
 origins = [
-    "*",
     "https://www.algometerai.com",
     "https://algometerai.com",
     "http://localhost:3000",  # For local development
