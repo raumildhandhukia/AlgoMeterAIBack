@@ -8,7 +8,9 @@ from core.analysis import analyze_code_snippet
 from utility.redis_cache import get_cached_data, cache_data, invalidate_cache
 import redis
 import os
-from core.user import store_user_analysis
+from core.user import store_user_analysis, get_device_id
+from services.mongo import get_mongo_client
+from datetime import datetime, UTC
 
 # Redis configuration
 REDIS_REMOTE_HOST = os.getenv("REDIS_REMOTE_HOST")
@@ -26,6 +28,59 @@ redis_client = redis.Redis(
 )
 
 # Rate limiting is now handled by middleware
+
+def store_company_tags_access(request: Request, title_slug: str):
+    """
+    Store device ID in database for company-tags access
+    
+    Args:
+        request: The incoming request
+        title_slug: The LeetCode problem title slug
+    """
+    try:
+        device_id = get_device_id(request)
+        mongo_client = get_mongo_client()
+        
+        if mongo_client:
+            try:
+                db = mongo_client['bigo']
+                user_collection = db['users']
+                
+                # Check if user exists
+                user = user_collection.find_one({"device_id": device_id})
+                
+                if not user:
+                    # Create new user if not exists
+                    user = {
+                        "device_id": device_id,
+                        "created_at": datetime.now(UTC),
+                        "company_tags_count": 1
+                    }
+                    user_collection.insert_one(user)
+                else:
+                    # Update user with company tags access
+                    update_fields = {}
+                    
+                    # Increment company_tags_count if it exists, otherwise set it to 1
+                    if "company_tags_count" in user:
+                        update_fields["$inc"] = {"company_tags_count": 1}
+                    else:
+                        update_fields["$set"] = {"company_tags_count": 1}
+                    
+                    if update_fields:
+                        user_collection.update_one(
+                            {"_id": user['_id']},
+                            update_fields,
+                            upsert=True
+                        )
+                
+                print(f"Successfully recorded company tags access for device {device_id}")
+            except Exception as e:
+                print(f"Error storing company tags access: {str(e)}")
+            finally:
+                mongo_client.close()
+    except Exception as e:
+        print(f"Error in device tracking: {str(e)}")
 
 @router.get("/company-tags")
 async def get_company_tags(
@@ -55,6 +110,9 @@ async def get_company_tags(
             
         title_slug = match.group(1)
         print(f"Title slug: {title_slug}")
+        
+        # Store device ID in database for company-tags access
+        store_company_tags_access(request, title_slug)
         
         # Create a cache key from the title slug
         cache_key = f"leetcode:company_tags:{title_slug}"
