@@ -11,6 +11,8 @@ import os
 from core.user import store_user_analysis, get_device_id
 from services.mongo import get_mongo_client
 from datetime import datetime, UTC
+import hashlib
+import time
 
 # Redis configuration
 REDIS_REMOTE_HOST = os.getenv("REDIS_REMOTE_HOST")
@@ -29,7 +31,7 @@ redis_client = redis.Redis(
 
 # Rate limiting is now handled by middleware
 
-def store_company_tags_access(request: Request, title_slug: str):
+def store_company_tags_access(request: Request, title_slug: str) -> str:
     """
     Store device ID in database for company-tags access
     
@@ -75,12 +77,18 @@ def store_company_tags_access(request: Request, title_slug: str):
                         )
                 
                 print(f"Successfully recorded company tags access for device {device_id}")
+                return device_id
             except Exception as e:
                 print(f"Error storing company tags access: {str(e)}")
             finally:
                 mongo_client.close()
     except Exception as e:
         print(f"Error in device tracking: {str(e)}")
+    
+    # If we get here, something went wrong, but we still need to return a device ID
+    # Generate a fallback device ID
+    fallback_fingerprint = f"{request.client.host}{time.time()}"
+    return hashlib.sha256(fallback_fingerprint.encode()).hexdigest()
 
 @router.get("/company-tags")
 async def get_company_tags(
@@ -112,7 +120,7 @@ async def get_company_tags(
         print(f"Title slug: {title_slug}")
         
         # Store device ID in database for company-tags access
-        store_company_tags_access(request, title_slug)
+        device_id = store_company_tags_access(request, title_slug)
         
         # Create a cache key from the title slug
         cache_key = f"leetcode:company_tags:{title_slug}"
@@ -123,7 +131,13 @@ async def get_company_tags(
         # If we have valid cached data (less than 14 days old), return it
         if cached_data and is_valid:
             print(f"Returning cached data for {title_slug}")
-            return cached_data
+            response = JSONResponse(content=cached_data)
+            
+            # Set cookie with device ID if it doesn't exist in request
+            if "device_id" not in request.cookies:
+                response.set_cookie(key="device_id", value=device_id, httponly=True, max_age=31536000)  # 1 year
+            
+            return response
         
         # If cache is invalid or doesn't exist, fetch fresh data
         print(f"Fetching fresh data for {title_slug}")
@@ -149,7 +163,13 @@ async def get_company_tags(
             # If we have expired cached data, return it as a fallback
             if cached_data:
                 print(f"Fetch failed, returning expired cached data for {title_slug}")
-                return cached_data
+                response = JSONResponse(content=cached_data)
+                
+                # Set cookie with device ID if it doesn't exist in request
+                if "device_id" not in request.cookies:
+                    response.set_cookie(key="device_id", value=device_id, httponly=True, max_age=31536000)  # 1 year
+                
+                return response
                 
             return JSONResponse(
                 status_code=status_code or 500,
@@ -165,13 +185,25 @@ async def get_company_tags(
             # Cache the parsed data in Redis
             cache_data(redis_client, cache_key, parsed_data)
             
-            return parsed_data
+            response = JSONResponse(content=parsed_data)
+            
+            # Set cookie with device ID if it doesn't exist in request
+            if "device_id" not in request.cookies:
+                response.set_cookie(key="device_id", value=device_id, httponly=True, max_age=31536000)  # 1 year
+            
+            return response
         except json.JSONDecodeError as e:
             print(f"Error parsing company tags JSON: {str(e)}")
             # If we have expired cached data, return it as a fallback
             if cached_data:
                 print(f"JSON parse error, returning expired cached data for {title_slug}")
-                return cached_data
+                response = JSONResponse(content=cached_data)
+                
+                # Set cookie with device ID if it doesn't exist in request
+                if "device_id" not in request.cookies:
+                    response.set_cookie(key="device_id", value=device_id, httponly=True, max_age=31536000)  # 1 year
+                
+                return response
                 
             return JSONResponse(
                 status_code=400,
