@@ -1,0 +1,14 @@
+Total failed companies: 12
+
+LiveRamp (liveramp)
+Murex (murex)
+chalo (chalo)
+Alarm.com (alarmcom)
+Chegg (chegg)
+BILL Holdings (billcom)
+Chariot (chariot)
+Clean Power Research (clean-power-research)
+Kaspersky (kaspersky)
+Envoy (envoy)
+A10 Networks (a10-networks)
+CME Group (cme-group)
