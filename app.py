@@ -17,6 +17,8 @@ app = FastAPI()
 origins = [
     "https://www.algometerai.com",
     "https://algometerai.com",
+    "https://leetcode.com",
+    "https://www.leetcode.com",
     "http://localhost:3000",  # For local development
     "http://127.0.0.1:3000"   # For local development
 ]
