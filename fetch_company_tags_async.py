@@ -21,7 +21,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Configuration
-BASE_URL = "https://big-o-insights-back.vercel.app"
+# BASE_URL = "https://big-o-insights-back.vercel.app"
+BASE_URL = "http://localhost:8000"
 CSV_PATH = "data/leetcode_questions_complete.csv"
 ERROR_CSV_PATH = f"failed_company_tags_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 CONCURRENCY_LIMIT = 5000  # Reduced to avoid rate limiting
@@ -31,7 +32,7 @@ RETRY_COUNT = 2  # Number of retries for failed requests
 async def fetch_company_tags(session, url, question_id, question_name, retries=RETRY_COUNT):
     """Fetch company tags for a given LeetCode problem URL."""
     encoded_url = urllib.parse.quote(url)
-    api_url = f"{BASE_URL}/company-tags?url={encoded_url}"
+    api_url = f"{BASE_URL}/api/company-tags?url={encoded_url}"
     
     for attempt in range(retries + 1):
         try:
