@@ -34,7 +34,7 @@ app.add_middleware(
 )
 
 # Add rate limiting middleware
-app.middleware("http")(rate_limit_middleware)
+# app.middleware("http")(rate_limit_middleware)
 
 # Include the main router
 app.include_router(main.router, prefix="/api")
