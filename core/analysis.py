@@ -58,15 +58,7 @@ def analyze_code_snippet(code_snippet: str):
     result = get_llm_response(prompt)
     if result["success"]:
         analysis = create_response_object(result["response"])
-        if analysis['success']:
-            try:
-                indices = generate_indices(analysis["time_complexity"], 10000)    
-            except Exception as e:
-                print(e)
-                return {"success": True, "response": analysis, "indices": []}
-            return {"success": True, "response": analysis, "indices": indices}
-        else:
-            return {"success": False, "error": "Failed to parse response"}
+        return {"success": True, "response": analysis, "indices": []}
     else:
         return {"success": False, "error": result["error"]}
 
