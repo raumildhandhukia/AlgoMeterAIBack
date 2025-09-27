@@ -7,7 +7,7 @@ from google.api_core import exceptions as google_exceptions
 # Initialize the Gemini model
 try:
     genai.configure(api_key=os.getenv("GENAI_API_KEY"))
-    model = genai.GenerativeModel('gemini-2.0-flash', generation_config={"response_mime_type": "application/json"})
+    model = genai.GenerativeModel('gemini-2.5-pro', generation_config={"response_mime_type": "application/json"})
 except Exception as e:
     print(f"Error initializing Gemini model: {str(e)}")
     model = None
